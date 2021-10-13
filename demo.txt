@@ -1,5 +1,0 @@
-2021-10-11 19:39:27,509 log.py [line:68] DEBUG debug_msg
-2021-10-11 19:39:27,511 log.py [line:69] INFO info_msg
-2021-10-11 19:39:27,512 log.py [line:70] WARNING warning_msg
-2021-10-11 19:39:27,512 log.py [line:71] ERROR error_msg
-2021-10-11 19:39:27,513 log.py [line:72] CRITICAL critical_msg
