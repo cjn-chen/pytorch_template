@@ -10,7 +10,6 @@ from torch.optim import Optimizer
 
 
 class LrScheduler(metaclass=ABCMeta):
-    @abstractmethod
     def __init__(self, optimizer: Optimizer, *args, **kwargs) -> None:
         """接收优化器，用于控制其中的学习了参数
 
@@ -26,13 +25,13 @@ class LrScheduler(metaclass=ABCMeta):
         """
         self.epoch = self.epoch + 1  # 记录目前学习的epoch
 
-    def update_lr_in_optimizer(self, optimizer, new_lr: float):
+    def update_lr_in_optimizer(self, new_lr: float):
         """更新optim中的学习率
 
         Args:
             new_lr (float): 将optim中的学习率更新为new_lr
         """
-        for param_group in optimizer.param_groups:
+        for param_group in self.optimizer.param_groups:
             param_group['lr'] = new_lr
 
 
@@ -40,7 +39,6 @@ class AdjustLearningRate(LrScheduler):
     def __init__(self, optimizer: Optimizer, *args, **kwargs) -> None:
         super().__init__(optimizer, *args, **kwargs)
         self.kwargs = kwargs
-        self.optimizer = optimizer
 
     def step(self):
         super().step()
@@ -61,4 +59,4 @@ class AdjustLearningRate(LrScheduler):
             }
         if self.epoch in lr_adjust.keys():
             lr_new = lr_adjust[self.epoch]
-            self.update_lr_in_optimizer(self.optimizer, lr_new)
+            self.update_lr_in_optimizer(lr_new)
