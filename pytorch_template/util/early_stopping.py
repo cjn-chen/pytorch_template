@@ -7,12 +7,54 @@
 '''
 import torch
 import numpy as np
+from abc import ABCMeta, abstractmethod, abstractproperty
 from ..log.logger import LoggerHandler
 
 logger = LoggerHandler()
 
 
-class EarlyStopping():
+class EarlyStoppingInterface(metaclass=ABCMeta):
+    @abstractmethod
+    def __init__(self) -> None:
+        pass
+
+    @abstractmethod
+    def __call__(self, val_loss: float, model: torch.nn.Module, path: str):
+        """用于判断是否符合早停的条件
+
+        Args:
+            val_loss (float): 验证集损失
+            model (torch.nn.Module): 模型，用于保存模型的参数
+            path (str): 保存checkpoint的路径
+        """
+        pass
+
+    @abstractproperty
+    def early_stop(self):
+        return self._early_stop
+
+    def save_checkpoint(
+        self,
+        val_loss: float,
+        model: torch.nn.Module,
+        path: str,
+    ):
+        """用于保存模型
+
+        Args:
+            val_loss (float): 验证集损失
+            model (torch.nn.Module): 模型，用于保存模型的参数
+            path (str): 保存checkpoint的路径
+        """
+        # 用于保存最优结果的函数
+        if self.verbose:
+            logger.info(
+                f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...'
+            )
+        torch.save(model.state_dict(), path + '/' + 'checkpoint.pth')
+
+
+class EarlyStopping(EarlyStoppingInterface):
     def __init__(
         self,
         patience: int = 7,
@@ -30,8 +72,11 @@ class EarlyStopping():
         self.verbose = verbose
         self.counter = 0  # 用于计数，判断累计几次没有优化
         self.best_score = None  # 记录其中最好的结果
-        self.early_stop = False  # 是否进行早停
+        self._early_stop = False  # 是否进行早停
         self.delta = delta  # 判断是否最优的时候，辅助判断的参数
+
+    def early_stop(self):
+        return self._early_stop
 
     def __call__(self, val_loss: float, model: torch.nn.Module, path: str):
         """用于判断是否符合早停的条件
@@ -54,28 +99,8 @@ class EarlyStopping():
                 )
             # 如果超过self.patience次没有取得最优结果，则提示进行早停
             if self.counter >= self.patience:
-                self.early_stop = True
+                self._early_stop = True
         else:
             self.best_val_loss = val_loss
             self.save_checkpoint(val_loss, model, path)
             self.counter = 0
-
-    def save_checkpoint(
-        self,
-        val_loss: float,
-        model: torch.nn.Module,
-        path: str,
-    ):
-        """用于保存模型
-
-        Args:
-            val_loss (float): 验证集损失
-            model (torch.nn.Module): 模型，用于保存模型的参数
-            path (str): 保存checkpoint的路径
-        """
-        # 用于保存最优结果的函数
-        if self.verbose:
-            logger.info(
-                f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...'
-            )
-        torch.save(model.state_dict(), path + '/' + 'checkpoint.pth')

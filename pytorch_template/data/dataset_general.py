@@ -17,6 +17,14 @@ class Dataset_General(Dataset):
         pass
 
     def __getitem__(self, index):
+        """用于获取元素
+
+        Args:
+            index ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
         return tuple_results
 
     def __len__(self):
